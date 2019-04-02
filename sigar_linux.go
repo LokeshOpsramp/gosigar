@@ -64,6 +64,7 @@ func (self *Uptime) Get() error {
 
 func (self *Mem) Get() error {
 	var available uint64 = MaxUint64
+	var sreclaimable uint64 = MaxUint64
 	var buffers, cached uint64
 	table := map[string]*uint64{
 		"MemTotal":     &self.Total,
@@ -71,6 +72,7 @@ func (self *Mem) Get() error {
 		"MemAvailable": &available,
 		"Buffers":      &buffers,
 		"Cached":       &cached,
+		"SReclaimable": &sreclaimable,
 	}
 
 	if err := parseMeminfo(table); err != nil {
@@ -78,9 +80,13 @@ func (self *Mem) Get() error {
 	}
 
 	if available == MaxUint64 {
-		self.ActualFree = self.Free + buffers + cached
+		self.ActualFree = self.Free + buffers + cached 
 	} else {
 		self.ActualFree = available
+	}
+	//Added by opsrampdeveloper as available is getting wrong mem usage values in suse 12
+	if sreclaimable != MaxUint64 {
+		self.ActualFree = self.Free + buffers + cached + sreclaimable
 	}
 
 	self.Used = self.Total - self.Free
