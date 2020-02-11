@@ -32,11 +32,16 @@ func (self *LoadAverage) Get() error {
 }
 
 func (u *Uptime) Get() error {
-	r1, _, e1 := syscall.Syscall(procGetTickCount64.Addr(), 0, 0, 0, 0)
+	r1, r2, e1 := syscall.Syscall(procGetTickCount64.Addr(), 0, 0, 0, 0)
 	if e1 != 0 {
 		return error(e1)
 	}
-	u.Length = (time.Duration(r1) * time.Millisecond).Seconds()
+
+	var rUptime float64
+	rUptime = float64(r2) * 4294967295
+
+	u.Length = (time.Duration(float64(r1)+rUptime) * time.Millisecond).Seconds()
+
 	return nil
 }
 
